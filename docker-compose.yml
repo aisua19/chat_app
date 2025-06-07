@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  api:
+    build: .
+    container_name: chat_api
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - chatnet
+    env_file:
+      - .env
+    depends_on:
+      - db #DBが起動してからAPIを立ち上げる
+    restart: always
+
+  db:
+    image: mariadb:10.11 #安定版のMariaDB指定
+    container_name: chat_db
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD} #root以外のDB接続ユーザを指定
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"  #開発中だけ開放、本番では削除
+    networks:
+      - chatnet
+    restart: always #DB障害時も自動再起動で復旧を試みる
+
+volumes:
+  db_data:
+
+networks:
+  chatnet:
